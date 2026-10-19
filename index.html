@@ -1,0 +1,46 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1" />
+  <meta name="theme-color" content="#ffffff" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Threads ảo</title>
+  <link rel="stylesheet" href="css/style.css?v=10" />
+</head>
+<body>
+  <div class="app" id="app">
+    <header class="topbar" id="topbar"></header>
+    <div class="edit-hint">✏️ Đang chỉnh sửa: chạm vào <b>tên, thời gian, nội dung, con số</b> để sửa · chạm <b>avatar</b> để đổi ảnh</div>
+    <main id="view" class="view"></main>
+    <footer id="bottom" class="bottom"></footer>
+  </div>
+
+  <!-- Sheet tạo bài mới -->
+  <div id="sheet" class="sheet hidden">
+    <div class="sheet-card">
+      <div class="sheet-head">
+        <button id="sheet-cancel" class="link">Hủy</button>
+        <b>Thread mới</b>
+        <span class="link-spacer"></span>
+      </div>
+      <div class="sheet-body">
+        <img id="sheet-avatar" class="avatar" alt="" title="Chạm để đổi avatar" />
+        <div class="sheet-main">
+          <input id="sheet-name" class="sheet-name" maxlength="30" placeholder="tên người dùng" />
+          <textarea id="sheet-text" rows="3" maxlength="1000" placeholder="Có gì mới?"></textarea>
+          <img id="sheet-img" class="p-img hidden" alt="" />
+          <button id="sheet-add-img" class="sheet-tool">🖼 Thêm ảnh</button>
+        </div>
+      </div>
+      <div class="sheet-foot">
+        <span class="muted">Ai cũng có thể trả lời</span>
+        <button id="sheet-post" class="send" disabled>Đăng</button>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="file-input" accept="image/*" hidden />
+  <script src="js/app.js?v=10"></script>
+</body>
+</html>

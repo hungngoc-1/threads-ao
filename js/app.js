@@ -1,0 +1,402 @@
+// ===================== Helpers =====================
+const $ = (s) => document.querySelector(s);
+const esc = (s = '') => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const KEY = 'threads_ao_v2';
+
+const DEFAULT_AVATAR = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#e4e4e4"/><circle cx="50" cy="40" r="18" fill="#b5b5b5"/><path d="M15 95c5-22 20-32 35-32s30 10 35 32z" fill="#b5b5b5"/></svg>');
+
+const LOGO = '<svg viewBox="0 0 192 192" class="th-logo"><path d="M141.5 88.7c-.8-.4-1.7-.8-2.5-1.1-1.5-27-16.2-42.5-41-42.6h-.3c-14.8 0-27.1 6.3-34.7 17.8l13.6 9.4c5.7-8.6 14.6-10.4 21.1-10.4h.2c8.2.1 14.3 2.4 18.3 7 2.9 3.3 4.8 7.900 5.8 13.8-7.3-1.2-15.2-1.6-23.6-1.1-23.7 1.4-39 15.2-38 34.4.5 9.7 5.4 18.1 13.7 23.6 7 4.6 16.1 6.9 25.5 6.4 12.4-.7 22.2-5.4 29-14.1 5.2-6.6 8.5-15.2 9.9-26 5.9 3.6 10.3 8.3 12.7 14 4.1 9.7 4.4 25.6-8.6 38.6-11.4 11.4-25.1 16.3-45.8 16.4-23-.2-40.3-7.5-51.6-21.8C34.6 139.6 29.2 120.3 29 96c.2-24.3 5.6-43.600 16.1-57.1C56.4 24.6 73.7 17.3 96.7 17.1c23.1.2 40.8 7.5 52.5 21.8 5.7 7 10 15.8 12.9 26.1l16-4.3c-3.5-12.7-8.9-23.7-16.3-32.7C146.9 9.6 125.2.3 96.8 0h-.1C68.4.2 46.900 9.6 32.5 27.9 19.7 44.2 13.1 66.8 12.9 95.9v.2c.2 29.1 6.8 51.7 19.6 68 14.4 18.3 35.9 27.7 64.2 27.9h.1c25.2-.2 42.9-6.8 57.6-21.4 19.2-19.2 18.6-43.2 12.3-58-4.5-10.6-13.1-19.2-25.2-23.9zm-43.5 41c-10.5.6-21.4-4.1-22-14.2-.4-7.5 5.3-15.8 22.6-16.8 2-.1 3.9-.2 5.8-.2 6.3 0 12.2.6 17.5 1.8-2 24.7-13.7 28.8-23.9 29.4z"/></svg>';
+const I = {
+  heart: '<svg viewBox="0 0 24 24"><path d="M12 19.8c-.4 0-.8-.15-1.15-.42C7.4 16.7 3 13.05 3 8.75 3 5.9 5.2 3.8 7.95 3.8c1.68 0 3.12.82 4.05 2.1.93-1.28 2.37-2.1 4.05-2.1C18.8 3.8 21 5.9 21 8.75c0 4.3-4.4 7.95-7.85 10.63-.35.27-.75.42-1.15.42Z"/></svg>',
+  comment: '<svg viewBox="0 0 24 24"><path d="M19.22 15.74A8.4 8.4 0 1 0 15.74 19.22l4.06.93c.35.08.65-.22.57-.57l-1.15-3.84Z"/></svg>',
+  repost: '<svg viewBox="0 0 24 24"><path d="M4.8 4.6v5.1h5.1"/><path d="M5.1 9.5A7.6 7.6 0 0 1 18.6 9.3"/><path d="M14.1 14.3h5.1v5.1"/><path d="M5.4 14.7A7.6 7.6 0 0 0 18.9 14.5"/></svg>',
+  share: '<svg viewBox="0 0 24 24"><path d="M6.7 12 4.3 5.9c-.45-1.15.68-2.25 1.8-1.73l13.7 6.38c1.15.54 1.15 2.36 0 2.9L6.1 19.83c-1.12.52-2.25-.58-1.8-1.73L6.7 12Zm0 0h13.5"/></svg>',
+  menu: '<svg viewBox="0 0 24 24"><path d="M4 8h16M4 16h10"/></svg>',
+  search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>',
+  back: '<svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg>',
+  bell: '<svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/></svg>',
+  more: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="8" cy="12" r=".6" fill="currentColor"/><circle cx="12" cy="12" r=".6" fill="currentColor"/><circle cx="16" cy="12" r=".6" fill="currentColor"/></svg>',
+  home: '<svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+  plus: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+  user: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg>',
+  photo: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15.5-5.2-5.2L5 21"/></svg>',
+  dots: '<svg viewBox="0 0 24 24" class="dots-ico"><circle cx="6" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="18" cy="12" r="1.6" fill="currentColor" stroke="none"/></svg>',
+};
+
+// Tăng/giảm số. Số dạng rút gọn ("13,5K") thì giữ nguyên.
+function bump(str, d) {
+  const s = String(str ?? '').trim();
+  if (/[a-zA-Z]/.test(s)) return s;
+  const v = Math.max(0, (parseInt(s.replace(/\D/g, ''), 10) || 0) + d);
+  return v ? String(v) : '';
+}
+const newItem = (o) => ({ id: uid(), avatar: me.avatar, name: me.name, time: 'Vừa xong', text: '', image: '',
+  likes: '', comments: '', reposts: '', shares: '', liked: false, ...o });
+
+// ===================== State =====================
+let me = load(KEY + '_me', { name: 'ban_cua_toi', avatar: DEFAULT_AVATAR });
+let posts = load(KEY, null) || [
+  { id: 'p1', avatar: DEFAULT_AVATAR, name: 'nguoidung_1', time: '18 giờ', views: '29,9K',
+    text: 'Chạm vào bất kỳ chữ/số/avatar nào để sửa trực tiếp, chạm vào bài để xem và viết bình luận nha 😆',
+    image: '', likes: '13,5K', comments: '2', reposts: '1,1K', shares: '249', liked: false,
+    replies: [
+      { id: 'r1', avatar: DEFAULT_AVATAR, name: 'tombofmycat', time: '10 giờ', text: 'Hay quá trời', image: '', likes: '5', comments: '', reposts: '', shares: '', liked: false, replies: [] },
+      { id: 'r2', avatar: DEFAULT_AVATAR, name: 'n.hcuti_', time: '8 giờ', text: 'Chuẩn luôn :)', image: '', likes: '12', comments: '', reposts: '', shares: '', liked: true, replies: [] },
+    ] },
+];
+let editing = false;
+
+function load(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } }
+function persist() {
+  try { localStorage.setItem(KEY, JSON.stringify(posts)); localStorage.setItem(KEY + '_me', JSON.stringify(me)); }
+  catch { alert('Bộ nhớ trình duyệt đã đầy, hãy xóa bớt ảnh.'); }
+}
+
+// Điều hướng bằng hash để nút Back của điện thoại hoạt động
+const currentThread = () => { const m = location.hash.match(/^#\/t\/(.+)$/); return m && posts.find((p) => p.id === m[1]); };
+
+// ===================== Render =====================
+const ce = () => 'contenteditable="true" spellcheck="false"';
+
+// Trạng thái trả lời bình luận
+let replyTo = null; // { cid, nid, targetId, sub, name }
+let draft = '';
+let replyImg = '';
+
+// main = bài gốc (avatar lớn) · comment = bình luận (avatar vừa) · nested = trả lời bình luận (avatar nhỏ)
+function itemHTML(p, { main = false, parent = null, cparent = null, nparent = null, sub = false, feed = false, author = false, hasReplies = false, chainPrev = false } = {}) {
+  const e = ce();
+  const isAuthor = p.isAuthor ?? author;
+  const rightIcon = main ? `<span class="wordmark">${LOGO}threads</span>${I.dots}` : cparent ? I.dots : `${LOGO}${I.dots}`;
+  const head = `
+    <div class="p-head">
+      <span class="p-name" data-f="name" ${e} title="Bấm để sửa tên">${esc(p.name)}</span>
+      <span class="p-time" data-f="time" ${e} title="Bấm để sửa thời gian">${esc(p.time)}</span>
+      ${!main && !feed ? `<span class="badge ${isAuthor ? '' : 'off'}" data-act="toggle-author" title="Bấm để bật/tắt nhãn Tác giả">Tác giả</span>` : ''}
+      <div class="p-right">
+        <div class="menu-wrap">
+          <button class="more-btn" data-act="item-menu" title="Menu / Xóa">${rightIcon}</button>
+          <div class="pop-menu">
+            <button class="pop-item" data-act="image">${p.image ? '✕ Gỡ ảnh' : '🖼 Thêm ảnh'}</button>
+            ${!main && !feed ? `<button class="pop-item" data-act="toggle-author">🏷️ ${isAuthor ? 'Ẩn' : 'Hiện'} nhãn Tác giả</button>` : ''}
+            <button class="pop-item danger" data-act="del">🗑️ Xóa</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  const content = `
+    <div class="p-text" data-f="text" ${e} title="Bấm để sửa nội dung">${esc(p.text)}</div>
+    ${p.image ? `<div class="p-img-wrap"><img class="p-img" src="${p.image}" data-act="change-image" title="Bấm vào ảnh để đổi ảnh khác" alt=""><button class="rm-img" data-act="image" title="Xóa ảnh">✕</button></div>` : ''}
+    <button class="add-img" data-act="image">${p.image ? '✕ Bỏ ảnh' : '🖼 Thêm ảnh'}</button>
+    <div class="p-actions">
+      <div class="act like ${p.liked ? 'liked' : ''}">
+        <button class="act-btn" data-act="like" title="Bấm để thả tim">${I.heart}</button>
+        <span class="num" data-f="likes" ${e} data-ph="0" title="Bấm để nhập số tim">${esc(p.likes)}</span>
+      </div>
+      <div class="act">
+        <button class="act-btn" data-act="${parent ? 'reply-to' : 'open'}" title="${parent ? 'Trả lời mục này' : 'Mở bình luận'}">${I.comment}</button>
+        <span class="num" data-f="comments" ${e} data-ph="0" title="Bấm để nhập số bình luận">${esc(p.comments)}</span>
+      </div>
+      <div class="act">
+        <button class="act-btn" data-act="repost" title="Đăng lại">${I.repost}</button>
+        <span class="num" data-f="reposts" ${e} data-ph="0" title="Bấm để nhập số đăng lại">${esc(p.reposts)}</span>
+      </div>
+      <div class="act">
+        <button class="act-btn" data-act="share" title="Chia sẻ">${I.share}</button>
+        <span class="num" data-f="shares" ${e} data-ph="0" title="Bấm để nhập số chia sẻ">${esc(p.shares)}</span>
+      </div>
+    </div>`;
+  const attrs = `data-id="${p.id}" ${parent ? `data-pid="${parent}"` : ''} ${cparent ? `data-cid="${cparent}"` : ''} ${nparent ? `data-nid="${nparent}"` : ''}`;
+  if (main) return `<article class="post main" ${attrs}>
+      <div class="p-head-row"><img class="avatar lg" src="${p.avatar}" data-act="avatar" title="Bấm để đổi avatar" alt=""><div class="p-body">${head}</div></div>
+      <div>${content}</div></article>`;
+  const cls = ['post', cparent ? 'nested' : '', sub ? 'sub' : '', hasReplies ? 'has-replies' : '', chainPrev ? 'chain-prev' : ''].filter(Boolean).join(' ');
+  return `<article class="${cls}" ${attrs} ${feed ? 'data-open="1"' : ''}>
+      <img class="avatar ${cparent ? 'sm' : ''}" src="${p.avatar}" data-act="avatar" title="Bấm để đổi avatar" alt="">
+      <div class="p-body">${head}${content}</div></article>`;
+}
+
+function render() {
+  document.body.classList.toggle('editing', editing);
+  const t = currentThread();
+  const editBtn = `<button class="icon-btn ${editing ? 'on' : ''}" data-act="toggle-edit" title="Hiện/ẩn khung chỉnh sửa">${t ? I.more : I.menu}</button>`;
+
+  if (t) {
+    // ---- Trang chi tiết thread ----
+    $('#topbar').innerHTML = `
+      <button class="back" data-act="back">${I.back}Quay lại</button>
+      <div class="t-title"><b>Thread</b><span><span data-f="views" data-thread="1" ${ce()} title="Bấm để sửa lượt xem">${esc(t.views || '0')}</span> lượt xem</span></div>
+      <div class="t-right"><button class="icon-btn dark" data-act="toggle-edit" title="Bật/tắt khung sửa">${I.bell}</button>${editBtn.replace('icon-btn', 'icon-btn dark')}</div>`;
+    $('#view').className = 'view thread';
+    $('#view').innerHTML = itemHTML(t, { main: true }) +
+      `<div class="section-title"><span>Hàng đầu ⌄</span><span class="muted">Xem hoạt động ›</span></div>` +
+      (t.replies.length ? t.replies.map((r) => {
+          const list = r.replies || [];
+          return `<div class="group">` +
+            itemHTML(r, { parent: t.id, author: r.name === t.name, hasReplies: list.length > 0 }) +
+            list.map((n, i) => {
+              const subs = n.replies || [];
+              return `<div class="branch ${i < list.length - 1 ? 'more' : ''}">` +
+                itemHTML(n, { parent: t.id, cparent: r.id, author: n.name === t.name, chainPrev: subs.length > 0 }) +
+                subs.map((s, j) => itemHTML(s, {
+                  parent: t.id, cparent: r.id, nparent: n.id, sub: true,
+                  author: s.name === t.name, chainPrev: j < subs.length - 1,
+                })).join('') +
+                `</div>`;
+            }).join('') +
+            `</div>`;
+        }).join('')
+        : '<p class="empty">Chưa có câu trả lời nào. Hãy là người đầu tiên!</p>');
+    const canSend = draft.trim() || replyImg;
+    $('#bottom').innerHTML = `
+      ${replyTo ? `<div class="reply-chip"><span>Đang trả lời <b>@${esc(replyTo.name)}</b></span><div class="chip-acts"><button class="chip-img" data-act="reply-img">🖼 Chọn ảnh</button><button data-act="cancel-reply" title="Hủy trả lời">✕</button></div></div>` : ''}
+      ${replyImg ? `<div class="reply-preview"><img src="${replyImg}" alt=""><button class="rm-preview" data-act="clear-reply-img" title="Bỏ ảnh">✕</button></div>` : ''}
+      <div class="composer">
+        <img class="avatar xs" src="${me.avatar}" data-act="my-avatar" title="Bấm để đổi avatar của bạn" alt="">
+        <input id="reply-input" value="${esc(draft)}" placeholder="${replyTo ? `Trả lời ${esc(replyTo.name)}...` : 'Thêm câu trả lời...'}" maxlength="1000" enterkeyhint="send">
+        <button class="comp-icon" data-act="reply-img" title="Đính kèm hình ảnh">${I.photo}</button>
+        <button id="reply-send" class="send" data-act="reply" ${canSend ? '' : 'disabled'}>Đăng</button>
+      </div>`;
+  } else {
+    // ---- Trang chủ (feed) ----
+    $('#topbar').innerHTML = `${editBtn}<div class="logo">${LOGO}<span>threads</span></div><button class="icon-btn" data-act="toggle-edit" title="Hiện/ẩn khung chỉnh sửa">${I.search}</button>`;
+    $('#view').className = 'view feed';
+    $('#view').innerHTML = posts.length ? posts.map((p) => itemHTML(p, { feed: true })).join('')
+      : '<p class="empty">Chưa có bài nào. Chạm dấu + để đăng bài đầu tiên.</p>';
+    $('#bottom').innerHTML = `
+      <nav class="nav">
+        <button class="active" data-act="home">${I.home}</button>
+        <button>${I.share}</button>
+        <button class="plus" data-act="new">${I.plus}</button>
+        <button>${I.heart}</button>
+        <button>${I.user}</button>
+      </nav>`;
+  }
+}
+
+// Tìm item (bài chính / bình luận / trả lời bình luận / trả lời của trả lời) từ một phần tử
+function findItem(el) {
+  const art = el.closest('.post'); if (!art) return {};
+  const { pid, cid, nid, id } = art.dataset;
+  if (pid) {
+    const thread = posts.find((p) => p.id === pid);
+    if (cid) {
+      const c = thread?.replies.find((r) => r.id === cid);
+      if (nid) {
+        const n = c?.replies?.find((r) => r.id === nid);
+        return { item: n?.replies?.find((s) => s.id === id), parent: n, comment: c, thread };
+      }
+      return { item: c?.replies?.find((r) => r.id === id), parent: c, comment: c, thread };
+    }
+    return { item: thread?.replies.find((r) => r.id === id), parent: thread, thread };
+  }
+  return { item: posts.find((p) => p.id === id) };
+}
+
+// ===================== Sự kiện =====================
+document.addEventListener('click', (e) => {
+  // Đóng menu 3 chấm nếu bấm ra ngoài
+  if (!e.target.closest('.menu-wrap')) {
+    document.querySelectorAll('.pop-menu.show').forEach((m) => m.classList.remove('show'));
+  }
+  const app = e.target.closest('#app'); if (!app) return;
+  if (e.target.closest('[contenteditable]')) return; // bấm vào chữ/số → để con trỏ gõ chữ trực tiếp
+  const btn = e.target.closest('[data-act]');
+  const act = btn?.dataset.act;
+  const { item, parent, thread } = findItem(e.target);
+
+  switch (act) {
+    case 'item-menu': {
+      const menu = btn.parentElement.querySelector('.pop-menu');
+      const isOpen = menu.classList.contains('show');
+      document.querySelectorAll('.pop-menu.show').forEach((m) => m.classList.remove('show'));
+      menu.classList.toggle('show', !isOpen);
+      return;
+    }
+    case 'toggle-edit': editing = !editing; render(); return;
+    case 'back': replyTo = null; draft = ''; replyImg = ''; location.hash = ''; return;
+    case 'home': location.hash = ''; scrollTo({ top: 0, behavior: 'smooth' }); return;
+    case 'new': openSheet(); return;
+    case 'reply': addReply(); return;
+    case 'reply-img':
+      pickImage((url) => { replyImg = url; render(); $('#reply-input')?.focus(); }, 'image');
+      return;
+    case 'clear-reply-img':
+      replyImg = ''; render(); $('#reply-input')?.focus(); return;
+    case 'open': {
+      const art = e.target.closest('.post');
+      if (art && !art.dataset.pid) location.hash = '#/t/' + art.dataset.id;
+      return;
+    }
+    case 'reply-to': {
+      const art = btn.closest('.post');
+      const { cid, nid, id } = art.dataset;
+      if (cid) {
+        // Bấm 💬 ở một câu trả lời → trả lời nối tiếp dưới người đó (vạch thẳng giữa 2 avatar nhỏ)
+        replyTo = { cid, nid: nid || id, targetItem: item, sub: true, name: item.name };
+      } else {
+        // Bấm 💬 ở bình luận gốc → trả lời bình luận gốc (vạch cong từ bình luận gốc)
+        replyTo = { cid: id, sub: false, name: item.name };
+      }
+      render(); $('#reply-input').focus(); return;
+    }
+    case 'cancel-reply': replyTo = null; render(); return;
+    case 'like':
+      item.liked = !item.liked; item.likes = bump(item.likes, item.liked ? 1 : -1); persist(); render();
+      document.querySelector(`.post[data-id="${item.id}"] .like`)?.classList.add('pop'); return;
+    case 'repost':
+      item.reposts = bump(item.reposts, 1); persist(); render(); return;
+    case 'share':
+      item.shares = bump(item.shares, 1); persist(); render(); return;
+    case 'toggle-author':
+      if (!item) return;
+      item.isAuthor = !(item.isAuthor ?? (thread && item.name === thread.name));
+      persist(); render(); return;
+    case 'avatar':
+      if (!item) return;
+      pickImage((url) => { item.avatar = url; persist(); render(); }, 'avatar');
+      return;
+    case 'my-avatar':
+      pickImage((url) => { me.avatar = url; persist(); render(); }, 'avatar');
+      return;
+    case 'change-image':
+      if (!item) return;
+      pickImage((url) => { item.image = url; persist(); render(); }, 'image');
+      return;
+    case 'image':
+      if (item.image) { item.image = ''; persist(); render(); }
+      else pickImage((url) => { item.image = url; persist(); render(); }, 'image');
+      return;
+    case 'del':
+      if (parent) {
+        parent.replies = (parent.replies || []).filter((r) => r !== item);
+        parent.comments = bump(parent.comments, -1);
+        if (parent !== thread) thread.comments = bump(thread.comments, -1);
+        if (replyTo && (replyTo.cid === item.id || replyTo.nid === item.id)) replyTo = null;
+      } else {
+        posts = posts.filter((p) => p !== item);
+        if (location.hash && !currentThread()) location.hash = '';
+      }
+      persist(); render(); return;
+  }
+  // Chạm vào khoảng trống của bài ở trang chủ → mở trang chi tiết
+  const art = e.target.closest('.post');
+  if (art && !editing && art.dataset.open && !art.dataset.pid) location.hash = '#/t/' + art.dataset.id;
+});
+
+// Sửa chữ trực tiếp ở bất kỳ đâu (bài chính, bình luận, câu trả lời)
+document.addEventListener('input', (e) => {
+  const el = e.target;
+  if (el.id === 'reply-input') { draft = el.value; $('#reply-send').disabled = !draft.trim() && !replyImg; return; }
+  const f = el.dataset?.f; if (!f) return;
+  const val = el.innerText.replace(/\n$/, '').trim();
+  if (el.dataset.thread) { currentThread().views = val; persist(); return; }
+  const { item, thread } = findItem(el);
+  if (item) {
+    item[f] = val;
+    if (f === 'name' && thread && item.isAuthor === undefined) {
+      el.parentElement.querySelector('.badge')?.classList.toggle('off', val !== thread.name);
+    }
+    persist();
+  }
+});
+document.addEventListener('keydown', (e) => {
+  if (e.target.id === 'reply-input' && e.key === 'Enter') { e.preventDefault(); addReply(); return; }
+  if (e.target.isContentEditable && e.target.dataset.f !== 'text' && e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
+});
+// Dán chữ thuần (không mang định dạng)
+document.addEventListener('paste', (e) => {
+  if (!e.target.isContentEditable) return;
+  e.preventDefault(); document.execCommand('insertText', false, e.clipboardData.getData('text/plain'));
+});
+// Khi rời ô sửa số trống → làm sạch ký tự xuống dòng thừa mà KHÔNG render lại toàn trang
+document.addEventListener('focusout', (e) => {
+  const el = e.target;
+  if (el.isContentEditable && !el.innerText.trim()) el.textContent = '';
+});
+
+window.addEventListener('hashchange', () => { replyTo = null; draft = ''; replyImg = ''; render(); scrollTo(0, 0); });
+
+function addReply() {
+  const t = currentThread();
+  const text = ($('#reply-input')?.value || '').trim();
+  if ((!text && !replyImg) || !t) return;
+  let targetId;
+  const c = replyTo && t.replies.find((r) => r.id === replyTo.cid);
+  if (c && replyTo.sub) {
+    const n = (c.replies || []).find((r) => r.id === replyTo.nid);
+    if (n) {
+      (n.replies ||= []).push(newItem({ text, image: replyImg }));
+      if (replyTo.targetItem) replyTo.targetItem.comments = bump(replyTo.targetItem.comments, 1);
+      else n.comments = bump(n.comments, 1);
+      targetId = n.replies[n.replies.length - 1].id;
+    }
+  } else if (c) {
+    (c.replies ||= []).push(newItem({ text, image: replyImg, replies: [] }));
+    c.comments = bump(c.comments, 1);
+    targetId = c.replies[c.replies.length - 1].id;
+  } else {
+    t.replies.push(newItem({ text, image: replyImg, replies: [] }));
+    targetId = t.replies[t.replies.length - 1].id;
+  }
+  t.comments = bump(t.comments, 1);
+  replyTo = null; draft = ''; replyImg = '';
+  persist(); render();
+  document.querySelector(`.post[data-id="${targetId}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ===================== Chọn & thu nhỏ ảnh =====================
+let pickCb = null, pickMode = 'image';
+function pickImage(cb, mode) { pickCb = cb; pickMode = mode; $('#file-input').click(); }
+$('#file-input').addEventListener('change', (e) => {
+  const file = e.target.files[0]; e.target.value = '';
+  if (!file || !pickCb) return;
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement('canvas'), ctx = c.getContext('2d');
+    if (pickMode === 'avatar') {
+      const m = Math.min(img.width, img.height); c.width = c.height = 160;
+      ctx.drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, 160, 160);
+    } else {
+      const r = Math.min(1, 900 / img.width); c.width = img.width * r; c.height = img.height * r;
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+    }
+    URL.revokeObjectURL(img.src);
+    pickCb(c.toDataURL('image/jpeg', 0.85)); pickCb = null;
+  };
+  img.src = URL.createObjectURL(file);
+});
+
+// ===================== Sheet tạo bài mới =====================
+let draftImage = '';
+function openSheet() {
+  draftImage = '';
+  $('#sheet-avatar').src = me.avatar; $('#sheet-name').value = me.name; $('#sheet-text').value = '';
+  $('#sheet-img').classList.add('hidden'); $('#sheet-add-img').textContent = '🖼 Thêm ảnh';
+  $('#sheet-post').disabled = true;
+  $('#sheet').classList.remove('hidden');
+  setTimeout(() => $('#sheet-text').focus(), 50);
+}
+const closeSheet = () => $('#sheet').classList.add('hidden');
+$('#sheet-cancel').onclick = closeSheet;
+$('#sheet').onclick = (e) => { if (e.target.id === 'sheet') closeSheet(); };
+$('#sheet-text').oninput = () => { $('#sheet-post').disabled = !$('#sheet-text').value.trim() && !draftImage; };
+$('#sheet-avatar').onclick = () => pickImage((url) => { me.avatar = url; $('#sheet-avatar').src = url; persist(); }, 'avatar');
+$('#sheet-add-img').onclick = () => {
+  if (draftImage) { draftImage = ''; $('#sheet-img').classList.add('hidden'); $('#sheet-add-img').textContent = '🖼 Thêm ảnh'; $('#sheet-text').oninput(); return; }
+  pickImage((url) => {
+    draftImage = url; $('#sheet-img').src = url; $('#sheet-img').classList.remove('hidden');
+    $('#sheet-add-img').textContent = '✕ Bỏ ảnh'; $('#sheet-text').oninput();
+  }, 'image');
+};
+$('#sheet-post').onclick = () => {
+  me.name = $('#sheet-name').value.trim() || me.name;
+  posts.unshift(newItem({ text: $('#sheet-text').value.trim(), image: draftImage, views: '0', replies: [] }));
+  persist(); closeSheet(); location.hash = ''; render(); scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+// Đảm bảo dữ liệu cũ có mảng replies
+posts.forEach((p) => { p.replies ||= []; });
+render();
