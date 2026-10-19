@@ -60,22 +60,33 @@ function persist() {
 // Điều hướng bằng hash để nút Back của điện thoại hoạt động
 const currentThread = () => { const m = location.hash.match(/^#\/t\/(.+)$/); return m && posts.find((p) => p.id === m[1]); };
 
-// Kiểm tra một mục có phải của Tác giả bài viết hay không & đồng bộ avatar Tác giả
+// Kiểm tra một mục có phải của Tác giả bài viết hay không & đồng bộ tên/avatar Tác giả
 function isItemAuthor(item, thread) {
   if (!item || !thread) return false;
   return item === thread || (item.isAuthor ?? item.name === thread.name);
 }
-function syncAuthorAvatar(thread, url) {
+function forEachAuthorItem(thread, fn) {
   if (!thread) return;
-  thread.avatar = url;
+  fn(thread);
   (thread.replies || []).forEach((r) => {
-    if (isItemAuthor(r, thread)) r.avatar = url;
+    if (isItemAuthor(r, thread)) fn(r);
     (r.replies || []).forEach((n) => {
-      if (isItemAuthor(n, thread)) n.avatar = url;
+      if (isItemAuthor(n, thread)) fn(n);
       (n.replies || []).forEach((s) => {
-        if (isItemAuthor(s, thread)) s.avatar = url;
+        if (isItemAuthor(s, thread)) fn(s);
       });
     });
+  });
+}
+function syncAuthorAvatar(thread, url) {
+  forEachAuthorItem(thread, (it) => { it.avatar = url; });
+}
+function syncAuthorName(thread, newName, activeEl) {
+  forEachAuthorItem(thread, (it) => {
+    it.isAuthor = true;
+    it.name = newName;
+    const domName = document.querySelector(`.post[data-id="${it.id}"] > .p-body > .p-head > .p-name, .post.main[data-id="${it.id}"] .p-name`);
+    if (domName && domName !== activeEl) domName.textContent = newName;
   });
 }
 
@@ -89,17 +100,18 @@ let draft = '';
 let replyImg = '';
 
 // main = bài gốc · comment = bình luận · nested = trả lời bình luận
-function itemHTML(p, { main = false, parent = null, cparent = null, nparent = null, sub = false, feed = false, author = false, threadAvatar = '', hasReplies = false, chainPrev = false } = {}) {
+function itemHTML(p, { main = false, parent = null, cparent = null, nparent = null, sub = false, feed = false, author = false, threadAvatar = '', threadName = '', hasReplies = false, chainPrev = false } = {}) {
   const e = ce();
   const isAuthor = p.isAuthor ?? author;
   const avatarSrc = (!main && isAuthor && threadAvatar) ? threadAvatar : p.avatar;
+  const displayName = (!main && isAuthor && threadName) ? threadName : p.name;
   const rightIcon = main ? `<span class="wordmark">${LOGO}threads</span>` : cparent ? I.dots : LOGO;
   const authorHeartHTML = !main && !feed && p.authorLiked
     ? `<button class="author-like" data-act="toggle-author-like" title="Tác giả đã thả tim (bấm để tắt)"><img class="al-avatar" src="${threadAvatar || p.avatar}" alt="">${I.heartBadge}</button>`
     : '';
   const head = `
     <div class="p-head">
-      <span class="p-name" data-f="name" ${e} title="Bấm để sửa tên">${esc(p.name)}</span>
+      <span class="p-name" data-f="name" ${e} title="Bấm để sửa tên">${esc(displayName)}</span>
       <span class="p-time" data-f="time" ${e} title="Bấm để sửa thời gian">${esc(p.time)}</span>
       ${!main && !feed ? `<span class="badge ${isAuthor ? '' : 'off'}" data-act="toggle-author" title="Bấm để bật/tắt nhãn Tác giả">Tác giả</span>` : ''}
       <div class="p-right">
@@ -161,19 +173,19 @@ function render() {
       <div class="t-title"><b>Thread</b><span><span data-f="views" data-thread="1" ${ce()} title="Bấm để sửa lượt xem">${esc(t.views || '0')}</span> lượt xem</span></div>
       <div class="t-right"><button class="icon-btn dark" data-act="toggle-edit" title="Bật/tắt khung sửa">${I.bell}</button>${editBtn.replace('icon-btn', 'icon-btn dark')}</div>`;
     $('#view').className = 'view thread';
-    $('#view').innerHTML = itemHTML(t, { main: true, threadAvatar: t.avatar }) +
+    $('#view').innerHTML = itemHTML(t, { main: true, threadAvatar: t.avatar, threadName: t.name }) +
       `<div class="section-title"><span class="sec-left">Hàng đầu ${I.chevDown}</span><span class="sec-right">Xem hoạt động ${I.chevRight}</span></div>` +
       (t.replies.length ? t.replies.map((r) => {
           const list = r.replies || [];
           return `<div class="group">` +
-            itemHTML(r, { parent: t.id, author: r.name === t.name, threadAvatar: t.avatar, hasReplies: list.length > 0 }) +
+            itemHTML(r, { parent: t.id, author: r.name === t.name, threadAvatar: t.avatar, threadName: t.name, hasReplies: list.length > 0 }) +
             list.map((n, i) => {
               const subs = n.replies || [];
               return `<div class="branch ${i < list.length - 1 ? 'more' : ''}">` +
-                itemHTML(n, { parent: t.id, cparent: r.id, author: n.name === t.name, threadAvatar: t.avatar, chainPrev: subs.length > 0 }) +
+                itemHTML(n, { parent: t.id, cparent: r.id, author: n.name === t.name, threadAvatar: t.avatar, threadName: t.name, chainPrev: subs.length > 0 }) +
                 subs.map((s, j) => itemHTML(s, {
                   parent: t.id, cparent: r.id, nparent: n.id, sub: true,
-                  author: s.name === t.name, threadAvatar: t.avatar, chainPrev: j < subs.length - 1,
+                  author: s.name === t.name, threadAvatar: t.avatar, threadName: t.name, chainPrev: j < subs.length - 1,
                 })).join('') +
                 `</div>`;
             }).join('') +
@@ -200,7 +212,7 @@ function render() {
     $('#topbar').className = 'topbar';
     $('#topbar').innerHTML = `${editBtn}<div class="logo">${LOGO}<span>threads</span></div><button class="icon-btn" data-act="toggle-edit" title="Hiện/ẩn khung chỉnh sửa">${I.search}</button>`;
     $('#view').className = 'view feed';
-    $('#view').innerHTML = posts.length ? posts.map((p) => itemHTML(p, { feed: true, threadAvatar: p.avatar })).join('')
+    $('#view').innerHTML = posts.length ? posts.map((p) => itemHTML(p, { feed: true, threadAvatar: p.avatar, threadName: p.name })).join('')
       : '<p class="empty">Chưa có bài nào. Chạm dấu + để đăng bài đầu tiên.</p>';
     $('#bottom').innerHTML = `
       <nav class="nav">
@@ -298,7 +310,10 @@ document.addEventListener('click', (e) => {
     case 'toggle-author':
       if (!item) return;
       item.isAuthor = !(item.isAuthor ?? (thread && item.name === thread.name));
-      if (item.isAuthor && thread) item.avatar = thread.avatar;
+      if (item.isAuthor && thread) {
+        item.avatar = thread.avatar;
+        item.name = thread.name;
+      }
       persist(); render(); return;
     case 'avatar':
       if (!item) return;
@@ -354,9 +369,11 @@ document.addEventListener('input', (e) => {
   if (el.dataset.thread) { currentThread().views = val; persist(); return; }
   const { item, thread } = findItem(el);
   if (item) {
-    item[f] = val;
-    if (f === 'name' && thread && item.isAuthor === undefined) {
-      el.parentElement.querySelector('.badge')?.classList.toggle('off', val !== thread.name);
+    const targetThread = thread || item;
+    if (f === 'name' && (item === targetThread || isItemAuthor(item, targetThread))) {
+      syncAuthorName(targetThread, val, el);
+    } else {
+      item[f] = val;
     }
     persist();
   }
