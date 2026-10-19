@@ -90,6 +90,26 @@ function syncAuthorName(thread, newName, activeEl) {
   });
 }
 
+// Chuẩn hóa danh sách ảnh của một mục (tương thích cả dữ liệu cũ p.image lẫn mảng p.images)
+function getImages(p) {
+  if (!p) return [];
+  if (Array.isArray(p.images)) return p.images;
+  p.images = p.image ? [p.image] : [];
+  delete p.image;
+  return p.images;
+}
+function mediaHTML(imgs) {
+  if (!imgs || !imgs.length) return '';
+  if (imgs.length === 1) {
+    return `<div class="p-img-wrap"><img class="p-img" src="${imgs[0]}" data-act="change-image" data-idx="0" title="Bấm vào ảnh để đổi ảnh này" alt=""><button class="rm-img" data-act="rm-image" data-idx="0" title="Xóa ảnh này">✕</button></div>`;
+  }
+  return `<div class="p-gallery">${imgs.map((src, i) => `
+    <div class="p-gal-item">
+      <img class="p-gal-img" src="${src}" data-act="change-image" data-idx="${i}" title="Bấm vào ảnh để đổi ảnh này" alt="">
+      <button class="rm-img" data-act="rm-image" data-idx="${i}" title="Xóa ảnh này">✕</button>
+    </div>`).join('')}</div>`;
+}
+
 // ===================== Render =====================
 const ce = () => 'contenteditable="true" spellcheck="false"';
 
@@ -97,7 +117,7 @@ const ce = () => 'contenteditable="true" spellcheck="false"';
 let replyTo = null; // { cid, nid, targetId, sub, name }
 let replyAsAuthor = false;
 let draft = '';
-let replyImg = '';
+let replyImgs = [];
 
 // main = bài gốc · comment = bình luận · nested = trả lời bình luận
 function itemHTML(p, { main = false, parent = null, cparent = null, nparent = null, sub = false, feed = false, author = false, threadAvatar = '', threadName = '', hasReplies = false, chainPrev = false } = {}) {
@@ -105,6 +125,7 @@ function itemHTML(p, { main = false, parent = null, cparent = null, nparent = nu
   const isAuthor = p.isAuthor ?? author;
   const avatarSrc = (!main && isAuthor && threadAvatar) ? threadAvatar : p.avatar;
   const displayName = (!main && isAuthor && threadName) ? threadName : p.name;
+  const imgs = getImages(p);
   const rightIcon = main ? `<span class="wordmark">${LOGO}threads</span>` : cparent ? I.dots : LOGO;
   const authorHeartHTML = !main && !feed && p.authorLiked
     ? `<button class="author-like" data-act="toggle-author-like" title="Tác giả đã thả tim (bấm để tắt)"><img class="al-avatar" src="${threadAvatar || p.avatar}" alt="">${I.heartBadge}</button>`
@@ -121,7 +142,8 @@ function itemHTML(p, { main = false, parent = null, cparent = null, nparent = nu
           <div class="pop-menu">
             ${!main && !feed ? `<button class="pop-item" data-act="toggle-author-like">❤️ ${p.authorLiked ? 'Bỏ' : 'Bật'} Tác giả thả tim</button>` : ''}
             ${!main && !feed ? `<button class="pop-item" data-act="reply-as-author">✍️ Tác giả trả lời</button>` : ''}
-            <button class="pop-item" data-act="image">${p.image ? '✕ Gỡ ảnh' : '🖼 Thêm ảnh'}</button>
+            <button class="pop-item" data-act="add-images">🖼 ${imgs.length ? 'Thêm ảnh nữa' : 'Thêm ảnh'}</button>
+            ${imgs.length ? `<button class="pop-item" data-act="clear-images">✕ Gỡ hết ảnh (${imgs.length})</button>` : ''}
             ${!main && !feed ? `<button class="pop-item" data-act="toggle-author">🏷️ ${isAuthor ? 'Ẩn' : 'Hiện'} nhãn Tác giả</button>` : ''}
             <button class="pop-item danger" data-act="del">🗑️ Xóa</button>
           </div>
@@ -130,8 +152,8 @@ function itemHTML(p, { main = false, parent = null, cparent = null, nparent = nu
     </div>`;
   const content = `
     <div class="p-text" data-f="text" ${e} title="Bấm để sửa nội dung">${esc(p.text)}</div>
-    ${p.image ? `<div class="p-img-wrap"><img class="p-img" src="${p.image}" data-act="change-image" title="Bấm vào ảnh để đổi ảnh khác" alt=""><button class="rm-img" data-act="image" title="Xóa ảnh">✕</button></div>` : ''}
-    <button class="add-img" data-act="image">${p.image ? '✕ Bỏ ảnh' : '🖼 Thêm ảnh'}</button>
+    ${mediaHTML(imgs)}
+    <button class="add-img" data-act="add-images">🖼 ${imgs.length ? `Thêm ảnh nữa (${imgs.length})` : 'Thêm ảnh'}</button>
     <div class="p-actions">
       <div class="act like ${p.liked ? 'liked' : ''}">
         <button class="act-btn" data-act="like" title="Bấm để thả tim">${I.heart}</button>
@@ -192,19 +214,19 @@ function render() {
             `</div>`;
         }).join('')
         : '<p class="empty">Chưa có câu trả lời nào. Hãy là người đầu tiên!</p>');
-    const canSend = draft.trim() || replyImg;
+    const canSend = draft.trim() || replyImgs.length > 0;
     const compAvatar = replyAsAuthor ? t.avatar : me.avatar;
     const ph = replyTo
       ? (replyAsAuthor ? `Tác giả trả lời ${esc(replyTo.name)}...` : `Trả lời ${esc(replyTo.name)}...`)
       : (replyAsAuthor ? `Trả lời bằng Tác giả (${esc(t.name)})...` : 'Thêm câu trả lời...');
     $('#bottom').innerHTML = `
       ${replyTo ? `<div class="reply-chip"><span>Đang trả lời <b>@${esc(replyTo.name)}</b></span><div class="chip-acts"><button class="chip-img" data-act="reply-img">🖼 Chọn ảnh</button><button data-act="cancel-reply" title="Hủy trả lời">✕</button></div></div>` : ''}
-      ${replyImg ? `<div class="reply-preview"><img src="${replyImg}" alt=""><button class="rm-preview" data-act="clear-reply-img" title="Bỏ ảnh">✕</button></div>` : ''}
+      ${replyImgs.length ? `<div class="reply-preview-list">${replyImgs.map((u, idx) => `<div class="reply-preview"><img src="${u}" alt=""><button class="rm-preview" data-act="rm-reply-img" data-idx="${idx}" title="Bỏ ảnh này">✕</button></div>`).join('')}</div>` : ''}
       <div class="composer">
         <img class="avatar xs" src="${compAvatar}" data-act="my-avatar" title="Bấm để đổi avatar" alt="">
         <button class="comp-author ${replyAsAuthor ? 'on' : ''}" data-act="toggle-reply-author" title="Bật để trả lời với tư cách Tác giả">Tác giả</button>
         <input id="reply-input" value="${esc(draft)}" placeholder="${ph}" maxlength="1000" enterkeyhint="send">
-        <button class="comp-icon" data-act="reply-img" title="Đính kèm hình ảnh">${I.photo}</button>
+        <button class="comp-icon" data-act="reply-img" title="Đính kèm 1 hoặc nhiều ảnh">${I.photo}</button>
         <button id="reply-send" class="send" data-act="reply" ${canSend ? '' : 'disabled'}>Đăng</button>
       </div>`;
   } else {
@@ -265,15 +287,19 @@ document.addEventListener('click', (e) => {
       return;
     }
     case 'toggle-edit': editing = !editing; render(); return;
-    case 'back': replyTo = null; draft = ''; replyImg = ''; location.hash = ''; return;
+    case 'back': replyTo = null; draft = ''; replyImgs = []; location.hash = ''; return;
     case 'home': location.hash = ''; scrollTo({ top: 0, behavior: 'smooth' }); return;
     case 'new': openSheet(); return;
     case 'reply': addReply(); return;
     case 'reply-img':
-      pickImage((url) => { replyImg = url; render(); $('#reply-input')?.focus(); }, 'image');
+      pickImages((urls) => { replyImgs.push(...urls); render(); $('#reply-input')?.focus(); });
       return;
-    case 'clear-reply-img':
-      replyImg = ''; render(); $('#reply-input')?.focus(); return;
+    case 'rm-reply-img': {
+      const idx = Number(btn.dataset.idx);
+      replyImgs.splice(idx, 1);
+      render(); $('#reply-input')?.focus();
+      return;
+    }
     case 'open': {
       const art = e.target.closest('.post');
       if (art && !art.dataset.pid) location.hash = '#/t/' + art.dataset.id;
@@ -335,13 +361,34 @@ document.addEventListener('click', (e) => {
         persist(); render();
       }, 'avatar');
       return;
-    case 'change-image':
+    case 'change-image': {
       if (!item) return;
-      pickImage((url) => { item.image = url; persist(); render(); }, 'image');
+      const idx = Number(btn.dataset.idx || 0);
+      pickImage((url) => {
+        const imgs = getImages(item);
+        imgs[idx] = url;
+        persist(); render();
+      }, 'single');
       return;
-    case 'image':
-      if (item.image) { item.image = ''; persist(); render(); }
-      else pickImage((url) => { item.image = url; persist(); render(); }, 'image');
+    }
+    case 'rm-image': {
+      if (!item) return;
+      const idx = Number(btn.dataset.idx || 0);
+      getImages(item).splice(idx, 1);
+      persist(); render();
+      return;
+    }
+    case 'add-images':
+      if (!item) return;
+      pickImages((urls) => {
+        getImages(item).push(...urls);
+        persist(); render();
+      });
+      return;
+    case 'clear-images':
+      if (!item) return;
+      item.images = []; delete item.image;
+      persist(); render();
       return;
     case 'del':
       if (parent) {
@@ -363,7 +410,7 @@ document.addEventListener('click', (e) => {
 // Sửa chữ trực tiếp ở bất kỳ đâu (bài chính, bình luận, câu trả lời)
 document.addEventListener('input', (e) => {
   const el = e.target;
-  if (el.id === 'reply-input') { draft = el.value; $('#reply-send').disabled = !draft.trim() && !replyImg; return; }
+  if (el.id === 'reply-input') { draft = el.value; $('#reply-send').disabled = !draft.trim() && !replyImgs.length; return; }
   const f = el.dataset?.f; if (!f) return;
   const val = el.innerText.replace(/\n$/, '').trim();
   if (el.dataset.thread) { currentThread().views = val; persist(); return; }
@@ -393,84 +440,112 @@ document.addEventListener('focusout', (e) => {
   if (el.isContentEditable && !el.innerText.trim()) el.textContent = '';
 });
 
-window.addEventListener('hashchange', () => { replyTo = null; draft = ''; replyImg = ''; render(); scrollTo(0, 0); });
+window.addEventListener('hashchange', () => { replyTo = null; draft = ''; replyImgs = []; render(); scrollTo(0, 0); });
 
 function addReply() {
   const t = currentThread();
   const text = ($('#reply-input')?.value || '').trim();
-  if ((!text && !replyImg) || !t) return;
+  if ((!text && !replyImgs.length) || !t) return;
   let targetId;
   const authorProps = replyAsAuthor ? { name: t.name, avatar: t.avatar, isAuthor: true } : {};
+  const imgs = [...replyImgs];
   const c = replyTo && t.replies.find((r) => r.id === replyTo.cid);
   if (c && replyTo.sub) {
     const n = (c.replies || []).find((r) => r.id === replyTo.nid);
     if (n) {
-      (n.replies ||= []).push(newItem({ text, image: replyImg, ...authorProps }));
+      (n.replies ||= []).push(newItem({ text, images: imgs, ...authorProps }));
       if (replyTo.targetItem) replyTo.targetItem.comments = bump(replyTo.targetItem.comments, 1);
       else n.comments = bump(n.comments, 1);
       targetId = n.replies[n.replies.length - 1].id;
     }
   } else if (c) {
-    (c.replies ||= []).push(newItem({ text, image: replyImg, replies: [], ...authorProps }));
+    (c.replies ||= []).push(newItem({ text, images: imgs, replies: [], ...authorProps }));
     c.comments = bump(c.comments, 1);
     targetId = c.replies[c.replies.length - 1].id;
   } else {
-    t.replies.push(newItem({ text, image: replyImg, replies: [], ...authorProps }));
+    t.replies.push(newItem({ text, images: imgs, replies: [], ...authorProps }));
     targetId = t.replies[t.replies.length - 1].id;
   }
   t.comments = bump(t.comments, 1);
-  replyTo = null; draft = ''; replyImg = '';
+  replyTo = null; draft = ''; replyImgs = [];
   persist(); render();
   document.querySelector(`.post[data-id="${targetId}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-// ===================== Chọn & thu nhỏ ảnh =====================
-let pickCb = null, pickMode = 'image';
-function pickImage(cb, mode) { pickCb = cb; pickMode = mode; $('#file-input').click(); }
-$('#file-input').addEventListener('change', (e) => {
-  const file = e.target.files[0]; e.target.value = '';
-  if (!file || !pickCb) return;
-  const img = new Image();
-  img.onload = () => {
-    const c = document.createElement('canvas'), ctx = c.getContext('2d');
-    if (pickMode === 'avatar') {
-      const m = Math.min(img.width, img.height); c.width = c.height = 160;
-      ctx.drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, 160, 160);
-    } else {
-      const r = Math.min(1, 900 / img.width); c.width = img.width * r; c.height = img.height * r;
-      ctx.drawImage(img, 0, 0, c.width, c.height);
-    }
-    URL.revokeObjectURL(img.src);
-    pickCb(c.toDataURL('image/jpeg', 0.85)); pickCb = null;
-  };
-  img.src = URL.createObjectURL(file);
+// ===================== Chọn & thu nhỏ ảnh (1 hoặc nhiều ảnh) =====================
+let pickCb = null, pickMode = 'single';
+function compressFile(file, mode) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas'), ctx = c.getContext('2d');
+      if (mode === 'avatar') {
+        const m = Math.min(img.width, img.height); c.width = c.height = 160;
+        ctx.drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, 160, 160);
+      } else {
+        const r = Math.min(1, 900 / img.width); c.width = img.width * r; c.height = img.height * r;
+        ctx.drawImage(img, 0, 0, c.width, c.height);
+      }
+      URL.revokeObjectURL(img.src);
+      resolve(c.toDataURL('image/jpeg', 0.85));
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
+function pickImage(cb, mode = 'single') {
+  pickCb = (urls) => cb(urls[0]);
+  pickMode = mode;
+  $('#file-input').multiple = false;
+  $('#file-input').click();
+}
+function pickImages(cb) {
+  pickCb = cb;
+  pickMode = 'multi';
+  $('#file-input').multiple = true;
+  $('#file-input').click();
+}
+$('#file-input').addEventListener('change', async (e) => {
+  const files = Array.from(e.target.files || []);
+  e.target.value = '';
+  if (!files.length || !pickCb) return;
+  const cb = pickCb; pickCb = null;
+  const urls = await Promise.all(files.map((f) => compressFile(f, pickMode)));
+  cb(urls);
 });
 
 // ===================== Sheet tạo bài mới =====================
-let draftImage = '';
+let draftImages = [];
+function renderSheetImgs() {
+  $('#sheet-imgs').innerHTML = draftImages.length
+    ? `<div class="reply-preview-list" style="margin:8px 0 0">${draftImages.map((u, idx) => `<div class="reply-preview"><img src="${u}" alt=""><button type="button" class="rm-preview" data-sidx="${idx}">✕</button></div>`).join('')}</div>`
+    : '';
+  $('#sheet-add-img').textContent = draftImages.length ? `🖼 Thêm ảnh nữa (${draftImages.length})` : '🖼 Thêm ảnh (1 hoặc nhiều)';
+  $('#sheet-post').disabled = !$('#sheet-text').value.trim() && !draftImages.length;
+}
+$('#sheet-imgs').addEventListener('click', (e) => {
+  const rm = e.target.closest('[data-sidx]');
+  if (!rm) return;
+  draftImages.splice(Number(rm.dataset.sidx), 1);
+  renderSheetImgs();
+});
 function openSheet() {
-  draftImage = '';
+  draftImages = [];
   $('#sheet-avatar').src = me.avatar; $('#sheet-name').value = me.name; $('#sheet-text').value = '';
-  $('#sheet-img').classList.add('hidden'); $('#sheet-add-img').textContent = '🖼 Thêm ảnh';
-  $('#sheet-post').disabled = true;
+  renderSheetImgs();
   $('#sheet').classList.remove('hidden');
   setTimeout(() => $('#sheet-text').focus(), 50);
 }
 const closeSheet = () => $('#sheet').classList.add('hidden');
 $('#sheet-cancel').onclick = closeSheet;
 $('#sheet').onclick = (e) => { if (e.target.id === 'sheet') closeSheet(); };
-$('#sheet-text').oninput = () => { $('#sheet-post').disabled = !$('#sheet-text').value.trim() && !draftImage; };
+$('#sheet-text').oninput = () => { $('#sheet-post').disabled = !$('#sheet-text').value.trim() && !draftImages.length; };
 $('#sheet-avatar').onclick = () => pickImage((url) => { me.avatar = url; $('#sheet-avatar').src = url; persist(); }, 'avatar');
 $('#sheet-add-img').onclick = () => {
-  if (draftImage) { draftImage = ''; $('#sheet-img').classList.add('hidden'); $('#sheet-add-img').textContent = '🖼 Thêm ảnh'; $('#sheet-text').oninput(); return; }
-  pickImage((url) => {
-    draftImage = url; $('#sheet-img').src = url; $('#sheet-img').classList.remove('hidden');
-    $('#sheet-add-img').textContent = '✕ Bỏ ảnh'; $('#sheet-text').oninput();
-  }, 'image');
+  pickImages((urls) => { draftImages.push(...urls); renderSheetImgs(); });
 };
 $('#sheet-post').onclick = () => {
   me.name = $('#sheet-name').value.trim() || me.name;
-  posts.unshift(newItem({ text: $('#sheet-text').value.trim(), image: draftImage, views: '0', replies: [] }));
+  posts.unshift(newItem({ text: $('#sheet-text').value.trim(), images: [...draftImages], views: '0', replies: [] }));
   persist(); closeSheet(); location.hash = ''; render(); scrollTo({ top: 0, behavior: 'smooth' });
 };
 
