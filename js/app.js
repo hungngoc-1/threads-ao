@@ -9,20 +9,22 @@ const DEFAULT_AVATAR = 'data:image/svg+xml;utf8,' + encodeURIComponent(
 
 const LOGO = '<svg viewBox="0 0 192 192" class="th-logo"><path d="M141.5 88.7c-.8-.4-1.7-.8-2.5-1.1-1.5-27-16.2-42.5-41-42.6h-.3c-14.8 0-27.1 6.3-34.7 17.8l13.6 9.4c5.7-8.6 14.6-10.4 21.1-10.4h.2c8.2.1 14.3 2.4 18.3 7 2.9 3.3 4.8 7.900 5.8 13.8-7.3-1.2-15.2-1.6-23.6-1.1-23.7 1.4-39 15.2-38 34.4.5 9.7 5.4 18.1 13.7 23.6 7 4.6 16.1 6.9 25.5 6.4 12.4-.7 22.2-5.4 29-14.1 5.2-6.6 8.5-15.2 9.9-26 5.9 3.6 10.3 8.3 12.7 14 4.1 9.7 4.4 25.6-8.6 38.6-11.4 11.4-25.1 16.3-45.8 16.4-23-.2-40.3-7.5-51.6-21.8C34.6 139.6 29.2 120.3 29 96c.2-24.3 5.6-43.600 16.1-57.1C56.4 24.6 73.7 17.3 96.7 17.1c23.1.2 40.8 7.5 52.5 21.8 5.7 7 10 15.8 12.9 26.1l16-4.3c-3.5-12.7-8.9-23.7-16.3-32.7C146.9 9.6 125.2.3 96.8 0h-.1C68.4.2 46.900 9.6 32.5 27.9 19.7 44.2 13.1 66.8 12.9 95.9v.2c.2 29.1 6.8 51.7 19.6 68 14.4 18.3 35.9 27.7 64.2 27.9h.1c25.2-.2 42.9-6.8 57.6-21.4 19.2-19.2 18.6-43.2 12.3-58-4.5-10.6-13.1-19.2-25.2-23.9zm-43.5 41c-10.5.6-21.4-4.1-22-14.2-.4-7.5 5.3-15.8 22.6-16.8 2-.1 3.9-.2 5.8-.2 6.3 0 12.2.6 17.5 1.8-2 24.7-13.7 28.8-23.9 29.4z"/></svg>';
 const I = {
-  heart: '<svg viewBox="0 0 24 24"><path d="M12 19.8c-.4 0-.8-.15-1.15-.42C7.4 16.7 3 13.05 3 8.75 3 5.9 5.2 3.8 7.95 3.8c1.68 0 3.12.82 4.05 2.1.93-1.28 2.37-2.1 4.05-2.1C18.8 3.8 21 5.9 21 8.75c0 4.3-4.4 7.95-7.85 10.63-.35.27-.75.42-1.15.42Z"/></svg>',
-  comment: '<svg viewBox="0 0 24 24"><path d="M19.22 15.74A8.4 8.4 0 1 0 15.74 19.22l4.06.93c.35.08.65-.22.57-.57l-1.15-3.84Z"/></svg>',
-  repost: '<svg viewBox="0 0 24 24"><path d="M4.8 4.6v5.1h5.1"/><path d="M5.1 9.5A7.6 7.6 0 0 1 18.6 9.3"/><path d="M14.1 14.3h5.1v5.1"/><path d="M5.4 14.7A7.6 7.6 0 0 0 18.9 14.5"/></svg>',
-  share: '<svg viewBox="0 0 24 24"><path d="M6.7 12 4.3 5.9c-.45-1.15.68-2.25 1.8-1.73l13.7 6.38c1.15.54 1.15 2.36 0 2.9L6.1 19.83c-1.12.52-2.25-.58-1.8-1.73L6.7 12Zm0 0h13.5"/></svg>',
+  heart: '<svg viewBox="0 0 24 24"><path d="M11.5 21.2c-.35 0-.7-.14-1-.38C7.05 18.05 1.8 13.7 1.8 8.6 1.8 5.2 4.35 2.7 7.4 2.7c1.82 0 3.25.88 4.1 2.25.85-1.37 2.28-2.25 4.1-2.25 3.05 0 5.6 2.5 5.6 5.9 0 5.1-5.25 9.45-8.7 12.22-.3.24-.65.38-1 .38Z"/></svg>',
+  comment: '<svg viewBox="0 0 24 24"><path d="M19.6 16.5A9.5 9.5 0 1 0 16.5 19.6l4.3 1.5c.3.1.55-.15.45-.45l-1.65-4.15Z"/></svg>',
+  repost: '<svg viewBox="0 0 24 24"><path d="M2 2.2V8h5.8"/><path d="M2.4 7.6A9.5 9.5 0 0 1 20.4 8.2"/><path d="M15.2 15.2H21V21"/><path d="M2.6 14.8a9.5 9.5 0 0 0 18 .6"/></svg>',
+  share: '<svg viewBox="0 0 24 24"><path d="M4.8 11.5 2.3 4.2c-.45-1.3.85-2.5 2.1-1.85l15.8 7.8c1.15.57 1.15 2.13 0 2.7L4.4 20.65c-1.25.65-2.55-.55-2.1-1.85l2.5-7.3Zm0 0h16"/></svg>',
   menu: '<svg viewBox="0 0 24 24"><path d="M4 8h16M4 16h10"/></svg>',
   search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>',
-  back: '<svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg>',
+  back: '<svg viewBox="0 0 24 24"><path d="m15 4-8 8 8 8"/></svg>',
   bell: '<svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/></svg>',
-  more: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="8" cy="12" r=".6" fill="currentColor"/><circle cx="12" cy="12" r=".6" fill="currentColor"/><circle cx="16" cy="12" r=".6" fill="currentColor"/></svg>',
+  more: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><circle cx="8.2" cy="12" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r=".9" fill="currentColor" stroke="none"/><circle cx="15.8" cy="12" r=".9" fill="currentColor" stroke="none"/></svg>',
   home: '<svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
   plus: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
   user: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg>',
   photo: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15.5-5.2-5.2L5 21"/></svg>',
   dots: '<svg viewBox="0 0 24 24" class="dots-ico"><circle cx="6" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="18" cy="12" r="1.6" fill="currentColor" stroke="none"/></svg>',
+  chevDown: '<svg viewBox="0 0 24 24" class="chev"><path d="m6 9 6 6 6-6"/></svg>',
+  chevRight: '<svg viewBox="0 0 24 24" class="chev"><path d="m9 6 6 6-6 6"/></svg>',
 };
 
 // Tăng/giảm số. Số dạng rút gọn ("13,5K") thì giữ nguyên.
@@ -65,11 +67,11 @@ let replyTo = null; // { cid, nid, targetId, sub, name }
 let draft = '';
 let replyImg = '';
 
-// main = bài gốc (avatar lớn) · comment = bình luận (avatar vừa) · nested = trả lời bình luận (avatar nhỏ)
+// main = bài gốc · comment = bình luận · nested = trả lời bình luận
 function itemHTML(p, { main = false, parent = null, cparent = null, nparent = null, sub = false, feed = false, author = false, hasReplies = false, chainPrev = false } = {}) {
   const e = ce();
   const isAuthor = p.isAuthor ?? author;
-  const rightIcon = main ? `<span class="wordmark">${LOGO}threads</span>${I.dots}` : cparent ? I.dots : `${LOGO}${I.dots}`;
+  const rightIcon = main ? `<span class="wordmark">${LOGO}threads</span>` : cparent ? I.dots : LOGO;
   const head = `
     <div class="p-head">
       <span class="p-name" data-f="name" ${e} title="Bấm để sửa tên">${esc(p.name)}</span>
@@ -77,7 +79,7 @@ function itemHTML(p, { main = false, parent = null, cparent = null, nparent = nu
       ${!main && !feed ? `<span class="badge ${isAuthor ? '' : 'off'}" data-act="toggle-author" title="Bấm để bật/tắt nhãn Tác giả">Tác giả</span>` : ''}
       <div class="p-right">
         <div class="menu-wrap">
-          <button class="more-btn" data-act="item-menu" title="Menu / Xóa">${rightIcon}</button>
+          <button class="more-btn" data-act="item-menu" title="Tùy chọn / Xóa">${rightIcon}</button>
           <div class="pop-menu">
             <button class="pop-item" data-act="image">${p.image ? '✕ Gỡ ảnh' : '🖼 Thêm ảnh'}</button>
             ${!main && !feed ? `<button class="pop-item" data-act="toggle-author">🏷️ ${isAuthor ? 'Ẩn' : 'Hiện'} nhãn Tác giả</button>` : ''}
@@ -125,13 +127,14 @@ function render() {
 
   if (t) {
     // ---- Trang chi tiết thread ----
+    $('#topbar').className = 'topbar thread-bar';
     $('#topbar').innerHTML = `
-      <button class="back" data-act="back">${I.back}Quay lại</button>
+      <button class="back" data-act="back">${I.back}<span>Quay lại</span></button>
       <div class="t-title"><b>Thread</b><span><span data-f="views" data-thread="1" ${ce()} title="Bấm để sửa lượt xem">${esc(t.views || '0')}</span> lượt xem</span></div>
       <div class="t-right"><button class="icon-btn dark" data-act="toggle-edit" title="Bật/tắt khung sửa">${I.bell}</button>${editBtn.replace('icon-btn', 'icon-btn dark')}</div>`;
     $('#view').className = 'view thread';
     $('#view').innerHTML = itemHTML(t, { main: true }) +
-      `<div class="section-title"><span>Hàng đầu ⌄</span><span class="muted">Xem hoạt động ›</span></div>` +
+      `<div class="section-title"><span class="sec-left">Hàng đầu ${I.chevDown}</span><span class="sec-right">Xem hoạt động ${I.chevRight}</span></div>` +
       (t.replies.length ? t.replies.map((r) => {
           const list = r.replies || [];
           return `<div class="group">` +
@@ -161,6 +164,7 @@ function render() {
       </div>`;
   } else {
     // ---- Trang chủ (feed) ----
+    $('#topbar').className = 'topbar';
     $('#topbar').innerHTML = `${editBtn}<div class="logo">${LOGO}<span>threads</span></div><button class="icon-btn" data-act="toggle-edit" title="Hiện/ẩn khung chỉnh sửa">${I.search}</button>`;
     $('#view').className = 'view feed';
     $('#view').innerHTML = posts.length ? posts.map((p) => itemHTML(p, { feed: true })).join('')
